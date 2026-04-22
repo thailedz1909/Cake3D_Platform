@@ -25,8 +25,13 @@ func NewAuthMiddleware(jwtManager *jwt.Manager, tokenRepo domain.TokenRepository
 func (m *AuthMiddleware) RequireAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
+		if !strings.HasPrefix(authHeader, "Bearer ") {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing or invalid authorization header"})
+			return
+		}
+
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-		if token == authHeader || strings.TrimSpace(token) == "" {
+		if strings.TrimSpace(token) == "" {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "missing or invalid authorization header"})
 			return
 		}

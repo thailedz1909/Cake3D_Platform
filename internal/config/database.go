@@ -9,18 +9,23 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	connectionRetryAttempts = 10
+	connectionRetryDelay    = 2 * time.Second
+)
+
 func NewMySQLConnection(cfg Config) (*gorm.DB, error) {
 	var (
 		db  *gorm.DB
 		err error
 	)
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < connectionRetryAttempts; i++ {
 		db, err = gorm.Open(mysql.Open(cfg.MySQLDSN), &gorm.Config{})
 		if err == nil {
 			return db, nil
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(connectionRetryDelay)
 	}
 	return nil, err
 }
@@ -33,12 +38,12 @@ func NewRedisClient(cfg Config) (*redis.Client, error) {
 	})
 
 	var err error
-	for i := 0; i < 10; i++ {
+	for i := 0; i < connectionRetryAttempts; i++ {
 		_, err = client.Ping(context.Background()).Result()
 		if err == nil {
 			return client, nil
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(connectionRetryDelay)
 	}
 
 	return nil, err

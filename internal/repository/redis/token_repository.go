@@ -8,6 +8,8 @@ import (
 	goredis "github.com/go-redis/redis/v8"
 )
 
+const minBlacklistTTL = time.Second
+
 type tokenRepository struct {
 	client *goredis.Client
 }
@@ -18,7 +20,7 @@ func NewTokenRepository(client *goredis.Client) domain.TokenRepository {
 
 func (r *tokenRepository) AddToBlacklist(ctx context.Context, jti string, ttl time.Duration) error {
 	if ttl <= 0 {
-		ttl = time.Second
+		ttl = minBlacklistTTL
 	}
 	return r.client.Set(ctx, blacklistKey(jti), "1", ttl).Err()
 }

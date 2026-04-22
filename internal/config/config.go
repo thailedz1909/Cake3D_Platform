@@ -37,14 +37,20 @@ func Load() Config {
 	redisDB, _ := strconv.Atoi(getEnv("REDIS_DB", "0"))
 	ttlMinutes, _ := strconv.Atoi(getEnv("JWT_ACCESS_TOKEN_TTL_MINUTES", "60"))
 
+	appEnv := getEnv("APP_ENV", "debug")
+	jwtSecret := getEnv("JWT_SECRET", "change-me-in-production")
+	if appEnv == "release" && jwtSecret == "change-me-in-production" {
+		panic("JWT_SECRET must be set to a strong secret in release environment")
+	}
+
 	return Config{
 		AppPort:        getEnv("APP_PORT", "8080"),
-		AppEnv:         getEnv("APP_ENV", "debug"),
+		AppEnv:         appEnv,
 		MySQLDSN:       mysqlDSN,
 		RedisAddr:      fmt.Sprintf("%s:%s", redisHost, redisPort),
 		RedisPassword:  getEnv("REDIS_PASSWORD", ""),
 		RedisDB:        redisDB,
-		JWTSecret:      getEnv("JWT_SECRET", "change-me-in-production"),
+		JWTSecret:      jwtSecret,
 		JWTIssuer:      getEnv("JWT_ISSUER", "cake3d-platform"),
 		AccessTokenTTL: time.Duration(ttlMinutes) * time.Minute,
 	}
